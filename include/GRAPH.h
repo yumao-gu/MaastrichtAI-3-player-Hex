@@ -88,6 +88,18 @@ void clone(Node* node, Node_List& nodes, Line* cpparent)
 
 class Graph{
 public:
+    friend class Iterator;
+
+    static bool IsRoot(Iterator);         //判断是否是根
+    static bool isLeaf(Iterator);         //判断是否是叶子
+    static Iterator Parent(Iterator);     //返回其父节点
+    static int NumChildren(Iterator);     //返回其子节点数目
+    int level(Node*,Iterator);
+
+    //跌代器函数
+    Iterator begin();                //Tree Begin
+    Iterator end();                  //Tree End
+
     Graph()
     {
         _nodes.push_back(new Node(A,NULL));
@@ -131,6 +143,65 @@ public:
         return (int)_nodes.size();
     }
 
+    int Leaves()
+    {
+        int i = 0;
+        list<Node*>::iterator it = _nodes.begin();
+        while (it != _nodes.end())
+        {
+            if ((*it)->_children.size() == 0)
+            {
+                i++;
+            }
+            it++;
+        }
+        return i;
+    }
+
+    int Root() const
+    {
+        return (*_nodes.begin())->_player;
+    }
+
+    int height(Node* node)
+    {
+        if (!node)
+        {
+            return -1;
+        }
+        else
+        {
+            list<Line*> plist = node->_children;
+            if (plist.size() == 0)
+            {
+                return 0;
+            }
+            int hA = 0;
+            for (list<Line*>::iterator it = plist.begin(); it != plist.end(); it++)
+            {
+                int hB = height((*it)->_child);
+                if (hB > hA)
+                {
+                    hA = hB;
+                }
+            }
+            return hA + 1;
+        }
+    }
+
+    int Height()
+    {
+        if (_nodes.size() != 0)
+        {
+            Node* GNode = _nodes.front();
+            return height(GNode);
+        }
+        else
+        {
+            return -1; //判断为空树
+        }
+    }
+
     Graph& operator=(const Graph & t)
     {
         Clear();
@@ -148,33 +219,127 @@ public:
         _nodes.push_back(n);
     }
 
+private:
     list<Node*> _nodes;            //节点数组
     list<Node*>::iterator LIt;     //一个节点迭代器
-    int height(Node*);
-    int level(Node*,Iterator);
+};
+//、
+class Iterator{
+public:
+
+    friend class Graph;
+
+    Iterator() {};
+
+    Iterator(const Iterator& it)
+    {
+        _graph = it._graph;
+        _lit = it._lit;
+    }
+
+    Iterator(Graph* t, Node* n)
+    {
+        _graph = t;
+        list<Node*>& nodes = _graph->_nodes;
+        _lit = find(nodes.begin(), nodes.end(), n);
+    }
+
+    Iterator(Graph * t, list<Node*>::iterator lt)
+    {
+        _graph = t;
+        _lit = lt;
+    }
+
+    void operator =(const Iterator& it)
+    {
+        _graph = it._graph;
+        _lit = it._lit;
+    }
+
+    bool operator ==(const Iterator & it)
+    {
+        return _lit == it._lit;
+    }
+
+    bool operator !=(const Iterator & it)
+    {
+        return _lit != it._lit;
+    }
+
+    Iterator& operator ++()
+    {
+        ++_lit;
+        return *this;
+    }
+
+    Iterator operator ++(int)
+    {
+        Iterator it(*this);
+        ++_lit;
+        return it;
+    }
+
+    Node* operator *() const
+    {
+        return (*_lit);
+    }
+
+    bool operator !()
+    {
+        return _lit == _graph->_nodes.end();
+    }
+
+private:
+    Graph* _graph;                        //Tree data
+    list<Node*>::iterator _lit;     //List Iterator
 };
 
-//This is TreeSub Class Iterator
-//class Iterator{
-//private:
-//    Tree* _tree;                        //Tree data
-//    list<TreeNode*>::iterator _lit;     //List Iterator
-//public:
-//    Iterator();                                 //默认构造函数
-//    Iterator(const Iterator&);                  //复制构造函数
-//    Iterator(Tree*,TreeNode*);                  //构造函数
-//    Iterator(Tree*,list<TreeNode*>::iterator);  //构造函数
-//    //运算符重载
-//    void operator=(const Iterator&);            //赋值运算符重载
-//    bool operator==(const Iterator&);           //关系运算符重载
-//    bool operator!=(const Iterator&);           //关系运算符重载
-//    Iterator& operator++();                     //前缀++运算符
-//    Iterator operator++(int);                   //后缀++运算符
-//    int operator*()const;                       //获得节点信息
-//    bool operator!();                           //赋值运算符重载
-//
-//    typedef list<TreeNode*>::iterator List;
-//    friend class Tree;
-//};
+Iterator Graph::begin()
+{
+    return Iterator(this, _nodes.begin());
+}
+
+Iterator Graph::end()
+{
+    return Iterator(this, _nodes.end());
+}
+
+bool Graph::IsRoot(Iterator it)
+{
+    Node* p = *it;
+    if (p->_parent == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Graph::isLeaf(Iterator it)
+{
+    Node* p = *it;
+    if (p->_children.size() == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+Iterator Graph::Parent(Iterator it)
+{
+    Node* p = *it;
+    Graph* t = it._graph;
+    Iterator Ite(t, p->_parent->_parent);
+    return Ite;
+}
+
+int Graph::NumChildren(Iterator it)
+{
+    Node* p = *it;
+    return (int)p->_children.size();
+}
+
+
+
+
 
 #endif //HEX_GRAPH_H

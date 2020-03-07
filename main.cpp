@@ -3,7 +3,7 @@
 #include <math.h>
 #include "./include/BOARD.h"
 #include "./include/PLAYER.h"
-#include "./include/GRAPH.h"
+#include "include/GRAPH.h"
 
 int main() {
 
