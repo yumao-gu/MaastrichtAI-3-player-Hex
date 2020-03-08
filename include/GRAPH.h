@@ -11,6 +11,7 @@
 #include "./PLAYER.h"
 #include <list>
 #include <algorithm>
+#include <sstream>
 
 using namespace std;
 
@@ -219,9 +220,25 @@ public:
         _nodes.push_back(n);
     }
 
+    void show(Iterator it,int show_height);
+
+    void Show(Iterator it);
+
+    void GraphShowClear()
+    {
+        graph_show.clear();
+    }
+
+    void GraphShowResize(int size)
+    {
+        GraphShowClear();
+        graph_show.resize(size);
+    }
+
 private:
     list<Node*> _nodes;            //节点数组
     list<Node*>::iterator LIt;     //一个节点迭代器
+    vector<string> graph_show;
 };
 //、
 class Iterator{
@@ -338,8 +355,33 @@ int Graph::NumChildren(Iterator it)
     return (int)p->_children.size();
 }
 
+void Graph::show(Iterator it,int show_height)
+{
+    if(IsRoot(it))
+    {
+        assert(show_height == 0);
+        graph_show[show_height] += "Game Begin\n";
+    }
+    else
+    {
+        stringstream info;
+        info << "\t{player:\t" << to_string((*it)->_player) << "\tparent:\t" << to_string((*it)->_parent->_player)
+             <<"\thex:\t"<<to_string((*it)->_parent->_q)<<'\t'<<to_string((*it)->_parent->_r)
+             <<'\t'<<to_string((*it)->_parent->_s)<<"}\t";
+        graph_show[show_height] += info.str();
+    }
+    for(auto cit = (*it)->_children.begin(); cit != (*it)->_children.end(); cit++)
+    {
+        Iterator Cit = Iterator(this, (*cit)->_child);
+        show(Cit,show_height+1);
+    }
+}
 
-
-
+void Graph::Show(Iterator it)
+{
+    int height = this->height((*it));
+    this->GraphShowResize(height);
+    this->show(it,0);
+}
 
 #endif //HEX_GRAPH_H
